@@ -7,7 +7,7 @@ complete league schedule from Bond Sports' public API.
 
 ## View it
 
-**https://cooperthompson.github.io/toca-schedules/toca-schedule.html**
+**https://cooperthompson.github.io/toca-schedules/**
 
 A single self-contained page: filter by team/division/date, click any column to
 sort, grouped by day. By default it shows the **current and upcoming** seasons
@@ -46,7 +46,7 @@ Requires PowerShell. Re-run whenever the league posts new games or a new season:
 ./Get-TocaSchedule.ps1 -BaseUrl "https://<bucket>.s3.amazonaws.com"
 ```
 
-Then commit and push `toca-schedule.html` and `ics/`:
+Then commit and push the generated files (`index.html`, `ics/`, etc.):
 
 ```powershell
 git add -A; git commit -m "Refresh schedule"; git push
@@ -58,7 +58,7 @@ git add -A; git commit -m "Refresh schedule"; git push
 | `-BaseUrl` | GitHub Pages URL | Public base where `ics/` is hosted; set `""` to omit subscribe links |
 | `-IncludePast` | off | Also show seasons that have already ended |
 | `-SeasonFilter` | — | Only seasons whose name matches a substring (e.g. `Winter`) |
-| `-OutFile` | `toca-schedule.html` | Output HTML path |
+| `-OutFile` | `index.html` | Output HTML path (a `toca-schedule.html` redirect is also written) |
 
 ## How it works (public Bond Sports API, no login)
 

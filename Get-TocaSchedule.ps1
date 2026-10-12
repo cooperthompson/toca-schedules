@@ -25,7 +25,7 @@
 [CmdletBinding()]
 param(
     [int]    $ProgramId    = 11545,                 # TOCA Madison adult league
-    [string] $OutFile      = "toca-schedule.html",
+    [string] $OutFile      = "index.html",          # site root so .../toca-schedules/ serves it
     [string] $IcsDir       = "ics",
     [string] $SeasonFilter = "",                    # substring match on season name (optional)
     [string] $FacilityName = "TOCA - Madison, WI",
@@ -314,4 +314,18 @@ $icsLinks
 "@
 
 [System.IO.File]::WriteAllText([System.IO.Path]::GetFullPath($OutFile), $html, (New-Object System.Text.UTF8Encoding($false)))
-Write-Host "Wrote $OutFile and $($icsFiles.Count) .ics file(s) in .\$IcsDir" -ForegroundColor Green
+
+# keep the old /toca-schedule.html link working by redirecting it to the canonical page
+$outName = [System.IO.Path]::GetFileName($OutFile)
+if ($outName -ne 'toca-schedule.html') {
+    $redirect = @"
+<!doctype html>
+<meta charset="utf-8">
+<title>TOCA Madison Schedule</title>
+<meta http-equiv="refresh" content="0; url=./$outName">
+<link rel="canonical" href="./$outName">
+<p>Redirecting to <a href="./$outName">the schedule</a>&hellip;</p>
+"@
+    [System.IO.File]::WriteAllText([System.IO.Path]::GetFullPath('toca-schedule.html'), $redirect, (New-Object System.Text.UTF8Encoding($false)))
+}
+Write-Host "Wrote $OutFile (+ toca-schedule.html redirect) and $($icsFiles.Count) .ics file(s) in .\$IcsDir" -ForegroundColor Green
