@@ -1,0 +1,4 @@
+# RFC 5545 calendars want CRLF
+*.ics text eol=crlf
+*.ps1 text eol=crlf
+*.html text eol=lf
