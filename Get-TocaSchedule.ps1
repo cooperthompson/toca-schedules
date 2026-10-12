@@ -29,9 +29,10 @@ param(
     [string] $IcsDir       = "ics",
     [string] $SeasonFilter = "",                    # substring match on season name (optional)
     [string] $FacilityName = "TOCA - Madison, WI",
-    [string] $BaseUrl      = "",                     # public HTTPS base where ics/ is hosted,
-                                                     # e.g. https://user.github.io/toca-schedule
-                                                     # Enables season-level Subscribe links.
+    [string] $BaseUrl      = "https://cooperthompson.github.io/toca-schedules",  # public HTTPS
+                                                     # base where ics/ is hosted. Enables the
+                                                     # season-level Subscribe links. Set "" to disable.
+    [switch] $IncludePast,                           # also show seasons that have already ended
     [string] $ApiBase      = "https://api.bondsports.co/v4"
 )
 $BaseUrl = $BaseUrl.TrimEnd('/')
@@ -83,6 +84,14 @@ if ($SeasonFilter) {
     Write-Host "  filtered to $($seasons.Count) season(s) matching '$SeasonFilter'" -ForegroundColor DarkCyan
 }
 
+if (-not $IncludePast) {
+    $today = (Get-Date).Date
+    $seasons = $seasons | Where-Object {
+        -not $_.endDate -or [datetime]::Parse($_.endDate, [cultureinfo]::InvariantCulture).Date -ge $today
+    }
+    Write-Host "  showing $($seasons.Count) current/upcoming season(s) (use -IncludePast for finished ones)" -ForegroundColor DarkCyan
+}
+
 $rows = New-Object System.Collections.Generic.List[object]
 
 foreach ($s in $seasons) {
@@ -117,6 +126,7 @@ Write-Host "Total games: $($rows.Count)" -ForegroundColor Green
 
 # ---------------------------------------------------------------- ICS per season
 if (-not (Test-Path $IcsDir)) { New-Item -ItemType Directory -Path $IcsDir | Out-Null }
+Get-ChildItem -LiteralPath $IcsDir -Filter *.ics -ErrorAction SilentlyContinue | Remove-Item -Force  # drop stale seasons
 $dtstamp  = (Get-Date).ToUniversalTime().ToString("yyyyMMddTHHmmssZ")
 $icsFiles = @()
 
@@ -175,12 +185,6 @@ $icsLinks = ($icsFiles | ForEach-Object {
 }) -join "`n"
 if (-not $icsLinks) { $icsLinks = '<li><em>no seasons with games</em></li>' }
 
-$subscribeNote = if ($BaseUrl) {
-    "Hosted at <code>$([System.Web.HttpUtility]::HtmlEncode($BaseUrl))</code>. Google subscriptions auto-update but Google only re-polls every ~8-24h."
-} else {
-    "Download works now. To enable one-click Google / Apple / Outlook <em>subscribe</em> links, host the <code>ics/</code> folder on a public HTTPS URL and re-run with <code>-BaseUrl &lt;url&gt;</code>."
-}
-
 $html = @"
 <!doctype html>
 <html lang="en">
@@ -217,7 +221,6 @@ $html = @"
   <div class="meta">Program $ProgramId &middot; all divisions / seasons &middot; generated $generated &middot; source: public programs-seasons events API</div>
 
   <h2>Add a whole division / season to your calendar</h2>
-  <p class="meta">$subscribeNote</p>
   <ul class="ics">
 $icsLinks
   </ul>
